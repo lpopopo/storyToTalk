@@ -13,6 +13,10 @@ route.get("/" , async (ctx , next)=>{
     ctx.body = "hello world"
 })
 
+route.get("/home", async (ctx , next)=>{
+    ctx.body = "this is home"
+})
+
 
 app.use(route.routes())
 
