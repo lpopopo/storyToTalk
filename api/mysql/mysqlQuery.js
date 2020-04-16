@@ -1,13 +1,16 @@
 const mysql = require("mysql")
 const config = require("./mysqlConfig")
 
-//创建mysql连接
-const connection = mysql.createConnection(config)
 
 const queryToDo = sql =>{
     return new Promise((reslove , resject)=>{
+        //创建mysql连接
+        const connection = mysql.createConnection(config)
         connection.query(sql , (err , result)=>{
-            if(err) resject(err)
+            if(err) {
+                resject(err)
+                console.log(err)
+            }
             reslove(result)
             connection.end()
         })
