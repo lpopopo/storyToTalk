@@ -4,17 +4,18 @@ const pubkey  = '-----BEGIN public keycenter-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCA
 
 //token验证
 const codeToVerify = (code , signature) =>{
-    //首先对playload进行base64解码
-    code = new Buffer(getBase64UrlUnescape(code), 'base64')
-    // signature = new Buffer(getBase64UrlUnescape(signature), 'base64')
+    //首先对playload ,signature 进行base64解码
+    code = getBase64UrlUnescape(code)
+    signature = getBase64UrlUnescape(signature)
     //payload取SHA-256
     const hash = crypto.createHash('sha256')
     const codeToSha =  hash.update(code).digest("base64")
-    console.log(codeToSha)
+    console.log(codeToSha+"\n")
+    console.log(signature)
+    console.log(pubkey)
     //验签
     const verify = crypto.createVerify('RSA-SHA256');
-    verify.update(codeToSha)
-    console.log(verify.verify(pubkey, signature , 'hex'))
+    console.log(verify.update(codeToSha).verify(pubkey, signature , 'base64'))
 }
 
 
