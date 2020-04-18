@@ -3,7 +3,7 @@ const router = require("koa-router")
 const bodyParser = require('koa-bodyparser')
 
 const {queryToDoSy} = require("./api/mysql/mysqlQuery")
-const {urldecode , getBase64UrlEscape}   = require("./api/token/tokenParser")
+const tokendeal =require("./api/common/tokendeal")
 const {storyarrange , storytomysql , cardtomysql}  = require("./api/common/storydispare")
 
 const app = new koa(),
@@ -16,9 +16,8 @@ route.post("/onload" , async (ctx , next)=>{
     let backword = null
     //首先接受token
     const {token} = ctx.request.query
-    const tokenToBase64 = getBase64UrlEscape(token)
     //解析token
-    const {payload} = urldecode(tokenToBase64)
+    const {payload} = tokendeal(token)
     const {redId} = payload
     //检查用户是否是第一次登录
     const checkusersql = ` select * from users where redid ='${redId}' `
@@ -51,9 +50,8 @@ route.post("/story", async (ctx , next)=>{
     const {issnum , storynum , cardid} = postdata
     //首先接受token
     const {token} = ctx.request.query
-    const tokenToBase64 = getBase64UrlEscape(token)
     //解析token
-    const {payload} = urldecode(tokenToBase64)
+    const {payload} = tokendeal(token)
     const {redId} = payload
     const storymysql = storytomysql(issnum , storynum)
     const cardmysql  = cardtomysql(cardid)
@@ -79,9 +77,8 @@ route.post("/card" , async(ctx , next)=>{
     let backword = null
     //首先接受token
     const {token} = ctx.request.query
-    const tokenToBase64 = getBase64UrlEscape(token)
     //解析token
-    const {payload} = urldecode(tokenToBase64)
+    const {payload} = tokendeal(token)
     const {redId} = payload    
     try{
         const cardselectsql = `select county , process , democracy , science from card where redid='${redId}'`
@@ -102,7 +99,6 @@ route.post("/card" , async(ctx , next)=>{
 
 route.post("/prize" , (ctx , next)=>{
     //待定
-
 })
 
 app.use(route.routes())

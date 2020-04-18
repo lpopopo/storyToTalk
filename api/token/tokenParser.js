@@ -35,17 +35,14 @@ const getBase64UrlUnescape = str => {
       .replace(/\_/g, '/');
   };
   
-  const decodeBase64Url = str =>{
-    console.log(Buffer.from(getBase64UrlUnescape(str), 'base64').toString())
-    return JSON.parse(
+  const decodeBase64Url = str => JSON.parse(
       Buffer.from(getBase64UrlUnescape(str), 'base64').toString()
    )
-  }
+
 
 
   const urldecode = (token) => {
     const segments = token.split('.');
-    console.log(segments[0])
     return {
       payload: decodeBase64Url(segments[0]),
     };
