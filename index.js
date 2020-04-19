@@ -3,8 +3,9 @@ const router = require("koa-router")
 const bodyParser = require('koa-bodyparser')
 
 const {queryToDoSy} = require("./api/mysql/mysqlQuery")
-const tokendeal =require("./api/common/tokendeal")
-const {storyarrange , storytomysql , cardtomysql}  = require("./api/common/storydispare")
+const {urldecode , tokenToVerify} =require("./api/common/tokendeal")
+const {storytomysql , cardtomysql}  = require("./api/common/storydispare")
+const {useronload} = require("./api/common/useronload")
 
 const app = new koa(),
       route = router();
@@ -12,44 +13,31 @@ const app = new koa(),
 app.use(bodyParser())
 
 
-route.get("/onload" , async (ctx , next)=>{
+route.get("/reonload" , async (ctx , next)=>{
+    let backword = null
+    //首先接受token
+    const {token} = ctx.request.query
+    //解析,验证token
+    const res= tokenToVerify(token)
+    if(res) const{payload} = urldecode(token)
+    const {redId} = payload
+    backword = useronload(redId)
+    ctx.redirect(`url?token=${token}`)
+    ctx.body = backword
+})
+
+route.post("/onload" , async(ctx , next)=>{
     let backword = null
     //首先接受token
     const {token} = ctx.request.query
     //解析token
-    const {payload} = tokendeal(token)
-    console.log(payload)
-    // const {redId} = payload
-    // if (redId) {
-    //     //检查用户是否是第一次登录
-    //     const checkusersql = ` select * from users where redid ='${redId}' `
-    //     const data = await queryToDoSy(checkusersql)
-    //     if (data.length === 0) {
-    //         //用户第一次登录
-    //         const { nickname, realName, stuNum, college } = payload
-    //         const classnum = payload.class
-    //         const useraddsql = `insert into users(redid , nickname , realname , stunum , class , collage) values 
-    //     ('${redId}' , '${nickname}' , '${realName}' , ${stuNum} , ${classnum} , '${college}');
-    //     INSERT into story(redid) VALUES("${redId}");
-    //     insert into card(redid)   values('${redId}'); 
-    //     `
-    //         await queryToDoSy(useraddsql)
-    //     }
-    //     //用户登录过，查询以往的记录
-    //     const storyselectsql = `select * from story where redid='${redId}'`
-    //     const story = await queryToDoSy(storyselectsql)
-    //     backword = {
-    //         code: 200,
-    //         story: storyarrange(story),
-    //     }
-    // }else{
-    //     backword = {
-    //         code:0,
-    //         errmsg:"token解析错误"
-    //     }
-    // }
-    ctx.body =  backword
+    const {payload} = urldecode(token)
+    const {redId} = payload
+    backword = useronload(redId)   
+    ctx.body = backword 
 })
+
+
 
 route.post("/story", async (ctx , next)=>{
     let backword
@@ -59,7 +47,7 @@ route.post("/story", async (ctx , next)=>{
     //首先接受token
     const {token} = ctx.request.query
     //解析token
-    const {payload} = tokendeal(token)
+    const {payload} = urldecode(token)
     const {redId} = payload
     const storymysql = storytomysql(issnum , storynum)
     const cardmysql  = cardtomysql(cardid)
@@ -86,7 +74,7 @@ route.post("/card" , async(ctx , next)=>{
     //首先接受token
     const {token} = ctx.request.query
     //解析token
-    const {payload} = tokendeal(token)
+    const {payload} =urldecode(token)
     const {redId} = payload    
     try{
         const cardselectsql = `select county , process , democracy , science from card where redid='${redId}'`

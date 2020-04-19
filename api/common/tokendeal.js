@@ -1,5 +1,12 @@
-const {urldecode , getBase64UrlEscape}   = require("../../api/token/tokenParser")
+const {urldecode , tokenToVerify}   = require("../../api/token/tokenParser")
 
-module.exports = (token)=>{
-    return urldecode(token)
+const getBase64UrlUnescape = str => {
+    str += new Array(5 - str.length % 4).join('=');
+    return str.replace(/\-/g, '+')
+      .replace(/\_/g, '/');
+  };
+
+module.exports = {
+    urldecode,
+    tokenToVerify
 }
