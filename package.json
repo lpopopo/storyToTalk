@@ -15,6 +15,7 @@
     "koa": "^2.11.0",
     "koa-bodyparser": "^4.3.0",
     "koa-router": "^8.0.8",
+    "koa2-cors": "^2.0.6",
     "mysql": "^2.18.1",
     "node-rsa": "^1.0.8",
     "sha.js": "^2.4.11"

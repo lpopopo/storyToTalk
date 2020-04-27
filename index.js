@@ -1,25 +1,30 @@
 const koa = require("koa")
 const router = require("koa-router")
+const cors = require('koa2-cors');
 const bodyParser = require('koa-bodyparser')
 
 const {queryToDoSy} = require("./api/mysql/mysqlQuery")
 const {urldecode , tokenToVerify} =require("./api/common/tokendeal")
 const {storytomysql , cardtomysql}  = require("./api/common/storydispare")
 const {useronload} = require("./api/common/useronload")
+const {random , prizelevel , isgetprize , getprizenum , leveltonum , checkgetprize} = require("./api/prize/index")
 
 const app = new koa(),
       route = router();
 
+app.use(cors())
 app.use(bodyParser())
 
+const url = "localhost:8080"
 
 route.get("/reonload" , async (ctx , next)=>{
     let backword = null
     //首先接受token
     const {token} = ctx.request.query
     //解析,验证token
-    const res= tokenToVerify(token)
-    if(res) const{payload} = urldecode(token)
+    // const res= tokenToVerify(token)
+    // if(res) {
+    const {payload} = urldecode(token)
     const {redId} = payload
     backword = useronload(redId)
     ctx.redirect(`url?token=${token}`)
@@ -33,17 +38,18 @@ route.post("/onload" , async(ctx , next)=>{
     //解析token
     const {payload} = urldecode(token)
     const {redId} = payload
-    backword = useronload(redId)   
+    backword = await useronload(redId)  
     ctx.body = backword 
 })
 
 
 
 route.post("/story", async (ctx , next)=>{
-    let backword
+    let backword = null
     const postdata = ctx.request.body
     //issnum 第几期 , storynum第几个故事 , cardid 卡片标识
     const {issnum , storynum , cardid} = postdata
+    console.log(issnum , storynum , cardid)
     //首先接受token
     const {token} = ctx.request.query
     //解析token
@@ -93,10 +99,69 @@ route.post("/card" , async(ctx , next)=>{
 
 
 
-route.post("/prize" , (ctx , next)=>{
-    //待定
+route.post("/prize" , async (ctx , next)=>{
+    const {token} = ctx.request.query
+    //解析token
+    const {payload} = urldecode(token)
+    const {redId} = payload    
+    let backword = null
+    const num = random()
+    if(num > 160){
+        //未中奖
+        backword= {
+            code:200,
+            level:0
+        }
+    }else if(num>=1 && num <= 160){
+        //中奖
+        //查看是否已经中奖
+        const isget = await isgetprize(redId)
+        if(isget){
+            //已经中奖
+            backword= {
+                code:200,
+                level:0
+            }
+        }else{
+            //没有中奖
+            const level = prizelevel(num)
+            //查看奖品数量
+            const prizenum = await getprizenum(level)
+            if(prizenum === 0){
+                //奖品发完
+                backword= {
+                    code:200,
+                    level:0
+                }
+            }else{
+                //中奖
+                const levelnum = leveltonum(level)
+                const sql = `update prizenum set ${level} = ${level} - 1;
+                             insert into usergetprize(redid , prizelevel) values ('${redId}' , ${levelnum});
+                `
+                await queryToDoSy(sql)
+                backword= {
+                    code:200,
+                    level:levelnum
+                }
+            }
+        }
+    }
+
+    ctx.body = backword
 })
 
+route.post("/usercheckprize" , async(ctx , next)=>{
+    const {token} = ctx.request.query
+    //解析token
+    const {payload} = urldecode(token)
+    const {redId} = payload    
+    const prizelevel = await checkgetprize(redId)
+    ctx.body = {
+        code:200,
+        level:prizelevel
+    }
+})
 app.use(route.routes())
 
 app.listen(8000)
