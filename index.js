@@ -1,12 +1,13 @@
 const koa = require("koa")
 const router = require("koa-router")
-const cors = require('koa2-cors');
+const cors = require('koa2-cors')
 const bodyParser = require('koa-bodyparser')
 
 const {queryToDoSy} = require("./api/mysql/mysqlQuery")
 const {urldecode , tokenToVerify} =require("./api/common/tokendeal")
 const {storytomysql , cardtomysql}  = require("./api/common/storydispare")
 const {useronload} = require("./api/common/useronload")
+const {getcardnum}  = require("./api/card/cardnum")
 const {random , prizelevel , isgetprize , getprizenum , leveltonum , checkgetprize} = require("./api/prize/index")
 
 const app = new koa(),
@@ -14,8 +15,6 @@ const app = new koa(),
 
 app.use(cors())
 app.use(bodyParser())
-
-const url = "localhost:8080"
 
 route.get("/reonload" , async (ctx , next)=>{
     let backword = null
@@ -26,7 +25,7 @@ route.get("/reonload" , async (ctx , next)=>{
     // if(res) {
     const {payload} = urldecode(token)
     const {redId} = payload
-    backword = useronload(redId)
+    backword = await useronload(redId , payload)
     ctx.redirect(`url?token=${token}`)
     ctx.body = backword
 })
@@ -38,7 +37,7 @@ route.post("/onload" , async(ctx , next)=>{
     //解析token
     const {payload} = urldecode(token)
     const {redId} = payload
-    backword = await useronload(redId)  
+    backword = await useronload(redId , payload)  
     ctx.body = backword 
 })
 
@@ -83,8 +82,7 @@ route.post("/card" , async(ctx , next)=>{
     const {payload} =urldecode(token)
     const {redId} = payload    
     try{
-        const cardselectsql = `select county , process , democracy , science from card where redid='${redId}'`
-        const card = await queryToDoSy(cardselectsql)
+        const card = await getcardnum(redId)
         backword={
             code:200,
             card: card[0]        
@@ -106,47 +104,51 @@ route.post("/prize" , async (ctx , next)=>{
     const {redId} = payload    
     let backword = null
     const num = random()
-    if(num > 160){
+    if (num > 160) {
         //未中奖
-        backword= {
-            code:200,
-            level:0
+        backword = {
+            code: 200,
+            level: 0
         }
-    }else if(num>=1 && num <= 160){
+    } else if (num >= 1 && num <= 160) {
         //中奖
         //查看是否已经中奖
         const isget = await isgetprize(redId)
-        if(isget){
+        if (isget) {
             //已经中奖
-            backword= {
-                code:200,
-                level:0
+            backword = {
+                code: 200,
+                level: 0
             }
-        }else{
+        } else {
             //没有中奖
             const level = prizelevel(num)
             //查看奖品数量
             const prizenum = await getprizenum(level)
-            if(prizenum === 0){
+            if (prizenum === 0) {
                 //奖品发完
-                backword= {
-                    code:200,
-                    level:0
+                backword = {
+                    code: 200,
+                    level: 0
                 }
-            }else{
+            } else {
                 //中奖
                 const levelnum = leveltonum(level)
                 const sql = `update prizenum set ${level} = ${level} - 1;
-                             insert into usergetprize(redid , prizelevel) values ('${redId}' , ${levelnum});
-                `
+                                 insert into usergetprize(redid , prizelevel) values ('${redId}' , ${levelnum});
+                    `
                 await queryToDoSy(sql)
-                backword= {
-                    code:200,
-                    level:levelnum
+                backword = {
+                    code: 200,
+                    level: levelnum
                 }
             }
         }
     }
+    //卡片数量-1
+    const cardnumlesssql = `update  card set county = county-1 ,process = process-1 , democracy = democracy-1 , science = science-1
+        where redid='${redId}'`
+    await queryToDoSy(cardnumlesssql)
 
     ctx.body = backword
 })

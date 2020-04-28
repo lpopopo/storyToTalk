@@ -1,7 +1,7 @@
 const {queryToDoSy} = require("../mysql/mysqlQuery")
 const {storyarrange} = require("../common/storydispare")
 
-const useronload = async(redId)=>{
+const useronload = async(redId , payload)=>{
     if (redId) {
         //检查用户是否是第一次登录
         const checkusersql = ` select * from users where redid ='${redId}' `
