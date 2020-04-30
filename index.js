@@ -172,6 +172,6 @@ const options = {
     key : fs.readFileSync("./key/test.key"),
     cret: fs.readFileSync("./key/test.crt")
 }
-https.createServer(options , app.callback()).listen(8000)
-// app.listen(8000)
+// https.createServer(options , app.callback()).listen(8000)
+app.listen(8000)
 console.log("server is run at port 8000")
