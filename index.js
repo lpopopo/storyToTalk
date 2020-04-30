@@ -29,7 +29,7 @@ route.get("/reonload" , async (ctx , next)=>{
     const {redId} = payload
     const url = 'https://wx.redrock.team/game/54Story/#/'
     backword = await useronload(redId , payload)
-    ctx.redirect(`url?token=${token}`)
+    ctx.redirect(`${url}?token=${token}`)
     ctx.body = backword
 })
 
@@ -173,5 +173,5 @@ const options = {
     cret: fs.readFileSync("./key/test.crt")
 }
 https.createServer(options , app.callback()).listen(8000)
-// app.listen(8001)
+// app.listen(8000)
 console.log("server is run at port 8000")
