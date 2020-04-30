@@ -2,6 +2,8 @@ const koa = require("koa")
 const router = require("koa-router")
 const cors = require('koa2-cors')
 const bodyParser = require('koa-bodyparser')
+const https = require("https")
+const fs = require("fs")
 
 const {queryToDoSy} = require("./api/mysql/mysqlQuery")
 const {urldecode , tokenToVerify} =require("./api/common/tokendeal")
@@ -25,6 +27,7 @@ route.get("/reonload" , async (ctx , next)=>{
     // if(res) {
     const {payload} = urldecode(token)
     const {redId} = payload
+    const url = 'https://wx.redrock.team/game/54Story/#/'
     backword = await useronload(redId , payload)
     ctx.redirect(`url?token=${token}`)
     ctx.body = backword
@@ -135,8 +138,7 @@ route.post("/prize" , async (ctx , next)=>{
                 //中奖
                 const levelnum = leveltonum(level)
                 const sql = `update prizenum set ${level} = ${level} - 1;
-                                 insert into usergetprize(redid , prizelevel) values ('${redId}' , ${levelnum});
-                    `
+                             insert into usergetprize(redid , prizelevel) values ('${redId}' , ${levelnum});`
                 await queryToDoSy(sql)
                 backword = {
                     code: 200,
@@ -166,5 +168,10 @@ route.post("/usercheckprize" , async(ctx , next)=>{
 })
 app.use(route.routes())
 
-app.listen(8000)
+const options = {
+    key : fs.readFileSync("./key/test.key"),
+    cret: fs.readFileSync("./key/test.crt")
+}
+https.createServer(options , app.callback()).listen(8000)
+// app.listen(8001)
 console.log("server is run at port 8000")
