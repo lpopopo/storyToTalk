@@ -2,8 +2,6 @@ const koa = require("koa")
 const router = require("koa-router")
 const cors = require('koa2-cors')
 const bodyParser = require('koa-bodyparser')
-const https = require("https")
-const fs = require("fs")
 
 const {queryToDoSy} = require("./api/mysql/mysqlQuery")
 const {urldecode , tokenToVerify} =require("./api/common/tokendeal")
@@ -155,23 +153,7 @@ route.post("/prize" , async (ctx , next)=>{
     ctx.body = backword
 })
 
-route.post("/usercheckprize" , async(ctx , next)=>{
-    const {token} = ctx.request.query
-    //解析token
-    const {payload} = urldecode(token)
-    const {redId} = payload    
-    const prizelevel = await checkgetprize(redId)
-    ctx.body = {
-        code:200,
-        level:prizelevel
-    }
-})
 app.use(route.routes())
 
-const options = {
-    key : fs.readFileSync("./key/test.key"),
-    cret: fs.readFileSync("./key/test.crt")
-}
-// https.createServer(options , app.callback()).listen(8000)
 app.listen(8000)
 console.log("server is run at port 8000")
