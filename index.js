@@ -15,12 +15,14 @@ const app = new koa(),
 
 app.use(async (ctx, next) => {
     await next()
-    const { token } = ctx.request.body
-    const isgoodman = await tokenToVerify(token)
-    if (!isgoodman) {
-        const { payload } = urldecode(token)
-        //记录非法用户
-        await towritebadman(payload)
+    if(ctx.request.method == 'POST'){
+        const {token} = ctx.request.body
+        const isgoodman = await tokenToVerify(token)
+        if (!isgoodman) {
+            const { payload } = urldecode(token)
+            //记录非法用户
+            await towritebadman(payload)
+        }
     }
 })
 
@@ -30,18 +32,13 @@ app.use(bodyParser())
 
 
 route.get("/reonload" , async (ctx , next)=>{
-    let backword = null
     //首先接受token
     const {token} = ctx.request.query
     //解析,验证token
     // const res= tokenToVerify(token)
     // if(res) {
-    const {payload} = urldecode(token)
-    const {redId} = payload
     const url = 'https://wx.redrock.team/game/54Story/#/'
-    backword = await useronload(redId , payload)
     ctx.redirect(`${url}?token=${token}`)
-    ctx.body = backword
 })
 
 route.post("/onload" , async(ctx , next)=>{
