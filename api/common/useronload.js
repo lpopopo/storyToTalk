@@ -32,6 +32,20 @@ const useronload = async(redId , payload)=>{
     }
 }
 
+const towritebadman = async(payload)=>{
+    const { redId,nickname, realName, stuNum, college } = payload
+    const classnum = payload.class 
+    const sql = `insert into badman(redid , nickname , realname , stunum , class , collage) values 
+    ('${redId}' , '${nickname}' , '${realName}' , ${stuNum} , ${classnum} , '${college}');`  
+    try{
+        await queryToDoSy(sql)
+        return true
+    }catch{
+        return false
+    }
+}
+
 module.exports = {
-    useronload
+    useronload,
+    towritebadman
 }

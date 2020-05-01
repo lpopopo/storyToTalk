@@ -1,20 +1,5 @@
-const crypto = require('crypto');
-
-const pubkeyget = async()=>{
-  //  const res = await axios.get("https://cyxbsmobile.redrock.team/magicloop/keycenter/public")
-  //  const {pub} = res.data.data
-  const pub = "-----BEGIN PUBLIC KEY-----\n" +
-    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1WXAZZkfDo4H5AfnF82r\n" +
-    "nPZNEhBaDQKI6IT+CBI4uUSBc+iq9OeLuWy/9tqIwn7WC1BVhFQQNbbI44jTReCS\n" +
-    "h4/RXd5AOI/fBzLVr8qlEUSMUSX1JzhBfrfVCV/0tMMy1Bh6yn6Cb2LFgfBglUsE\n" +
-    "tuTZlCnmE2+V45paoGH2tO3mIqkopBAz5kIn+TJ7dhpxivIfRAx2HyVq4JJy4CQD\n" +
-    "Jy/pZ6fYamnVl8p1IiONmU1hS8MDZysoxk5e6mv0OFVaXd8naoN9dlD7OmW86N+Y\n" +
-    "8k1qIVcBPIkAQp2N+APhIueolC4kgF8Zjlkbw9cJFFYA8f5D1DU5acv/wQt58Ypi\n" +
-    "jwIDAQAB\n" +
-    "-----END PUBLIC KEY-----"
-  return pub
-}
-
+const axios = require("axios");
+const qs = require("qs");
 
 //解析传送过来的token，由于token有可能被做为url，
 //而base64中的+/=三个字符会被转义，导致url变得更长，所以token的base64会将+转化为-、/转化为_、删除=
@@ -26,30 +11,54 @@ const getBase64UrlEscape = str => (
 const decodeBase64 = str => Buffer.from(str, 'base64')
 
 //token验证
+const SuccessfulCode = 10000;
+const VerifyServiceUrl = "https://wx.redrock.team/magicloop/keycenter/verify";
+const baseOptions = {
+  method: "POST",
+  headers: { "content-type": "application/x-www-form-urlencoded" },
+  url: VerifyServiceUrl,
+}
+
+const isLegalToken = async (token) => {
+  if (token) {
+    const data = { token };
+    const postOptions = {
+      ...baseOptions,
+      data: qs.stringify(data),
+    };
+    try {
+      const { data } = await axios(postOptions);
+      if (data.status == SuccessfulCode) {
+        return true;
+      }
+    } catch (err) {
+      // console.log(err.response.data);
+    } finally {
+      // console.log('发生未知错误')
+    }
+  }
+  return false;
+};
+
 const tokenToVerify = async(token) =>{
-    const {payload , signature} = urldecode(token)
-    //payload取SHA-256
-    const hash = crypto.createHash('sha256')
-    const payloadToSha =  hash.update(JSON.stringify(payload)).digest("base64")
-    const pubkey = await pubkeyget()
-    const signaturedec = crypto.publicDecrypt(pubkey, signature).toString("base64")
-    //验签
-    console.log(payloadToSha)
-    console.log(signaturedec)
-    return payloadToSha == signaturedec
+  const tokendeal = getBase64UrlEscape(token)
+  const tokeVerifyRes = await isLegalToken(tokendeal)
+  return tokeVerifyRes
 }
 
 
-
+//解析token获得学生信息
 const urldecode = (token) => {
   //将token中的%20即空格替换为+
-  const tokenreplace = getBase64UrlEscape(token)
-  const tokensplit = tokenreplace.split(".")
-  const payloadbase64 = JSON.parse(decodeBase64(tokensplit[0]).toString())
-  const signaturebase64 = decodeBase64(tokensplit[1])
-  return {
-    payload: payloadbase64,
-    signature: signaturebase64
+  try{
+    const tokenreplace = getBase64UrlEscape(token)
+    const tokensplit = tokenreplace.split(".")
+    const payloadbase64 = JSON.parse(decodeBase64(tokensplit[0]).toString())
+    return {
+      payload: payloadbase64,
+    }
+  }catch{
+    return {}
   }
 };
 

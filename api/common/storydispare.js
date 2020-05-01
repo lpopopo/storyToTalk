@@ -21,13 +21,13 @@ const storyarrange = story =>{
 const storytomysql = (issnum , storynum) =>{
     let iss 
     switch(issnum){
-        case 1:
+        case '1':
             iss = "frist"
             break;
-        case 2:
+        case '2':
             iss = "second"
             break;
-        case 3:
+        case '3':
             iss = "third"
             break;
         default:
@@ -40,16 +40,16 @@ const storytomysql = (issnum , storynum) =>{
 const cardtomysql = cardid =>{
     let card
     switch(cardid){
-        case 1:
+        case '1':
             card = "county"
             break;
-        case 2:
+        case '2':
             card = "process"
             break;
-        case 3:
+        case '3':
             card = "democracy"  
             break;
-        case 4:
+        case '4':
             card = "science"  
             break;
         default:
